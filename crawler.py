@@ -1,51 +1,39 @@
 from lxml import html
-from html.parser import HTMLParser
 import urllib, re
 from bs4 import BeautifulSoup
-import requests
-from googlesearch import search
+from googlesearch import GoogleSearch
+import datetime
 
 
 
-def retrive_data(google):
-    text_data = "" 
-    for url in search(google,stop=5):
-        #print(url)
-        try:
-            html = urllib.request.urlopen(url)
-            code = BeautifulSoup(html,"lxml")
-            data = code.find(text=True)
-            print(analyze(code))
-            if analyze(text_from_html(code)):
-                text_data = text_data + text_from_html(code)
-            
-        except Exception:
-            pass
-    
-        #page = requests.get(url)
-       # data = page.content
+
+def retrieve_data(query,number_results,filter=0):
+    '''(str,int,str) -> str
+    this will take data from the google searches and 
+    '''
+    progress_time = number_results / 100
+    progress = 0
+    text_data = ""
+    today = datetime.date.today()
+    today_to_str = str(today.year)+str(today.day)
+    if filter == 0:
+        crawler = GoogleSearch().search("site:news.google.com " + query + " daterange:" + today_to_str ,num_results = number_results)
+        print("Scanning google news for: " + query + " today is " + today_to_str)
+    elif filter == 1:
+        crawler = GoogleSearch().search(query + " daterange:" + today_to_str+"-"+today_to_str,num_results = number_results)
+        print("You searched: " + query + " daterange:" + today_to_str )
+    else:
+        crawler = GoogleSearch().search(query,num_results = number_results)
+    for url in crawler.results:
+        print("visiting: " )
+        text_data += " " + url.getText()
     return text_data
+'''
+def save_to_file(query,text_data):
+    text_file = open(query+".txt","w+")
+    text_file.write(text_data)
+    text_file.close()
+    return text_file.name
     
-def text_from_html(body):
-    soup = BeautifulSoup(body, 'html.parser')
-    texts = soup.findAll(text=True)
-    visible_texts = filter(tag_visible, texts)  
-    return u" ".join(t.strip() for t in visible_texts)
-    
-# def analyze(data):
-#     parser = HTMLParser()
-#     text = ""
-#     for tag in data:
-#         text = parser.handle_starttag(tag,data)
-#         print(tag)
-#     return text
+  '''  
 
-def analyze(element):
-     if element.parent.name in ['style', 'script', '[document]', 'head', 'title']:
-         return False
-     elif re.match('<!--.*-->', str(element.encode('utf-8'))):
-        return False
-     return True
-       
-
-print(retrive_data('dogs'))
